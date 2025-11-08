@@ -171,4 +171,5 @@ json handle_knn_query(Graph& graph, const json& query) {
     }
     
     return result;
+
 }
