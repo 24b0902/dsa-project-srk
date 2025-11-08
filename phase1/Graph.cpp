@@ -96,4 +96,9 @@ bool Graph::restore_edge(int edge_id) {
         }
     }
     return state_changed;
+
+}
+
+const std::unordered_map<int, Node>& Graph::get_all_nodes() const {
+    return node_map;
 }
