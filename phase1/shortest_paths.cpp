@@ -39,20 +39,28 @@ std::pair<std::vector<int>, double> minimising_distance(
     const std::unordered_set<int>& forbidden_nodes,
     const std::unordered_set<std::string>& forbidden_road_types
 ) {
-   
+    
+    // Priority queue stores {f_score, node_id}
     std::priority_queue<std::pair<double, int>, std::vector<std::pair<double, int>>, std::greater<std::pair<double, int>>> pq;
     
+    // g_dist stores the actual distance (g-score)
     std::unordered_map<int, double> g_dist; 
     std::unordered_map<int, int> parent;
 
     const Node& target_node = graph.get_node_by_id(target); 
 
+    for(const auto& pair : graph.get_all_nodes()) {
+        g_dist[pair.first] = std::numeric_limits<double>::infinity();
+    }
+
+    // Set source distance and parent
     g_dist[source] = 0.0;
+    parent[source] = -1;
+    
     const Node& source_node = graph.get_node_by_id(source);
     double h_source = heuristic_h(source_node, target_node);
-    
-    pq.push({h_source, source}); 
-    parent[source] = -1;
+    pq.push({h_source, source}); // f_score = g_score (0) + h_score
+
     bool target_found = false;
 
     while (!pq.empty()) {
@@ -60,14 +68,10 @@ std::pair<std::vector<int>, double> minimising_distance(
         int u = pq.top().second;
         pq.pop();
 
-        //Check for stale entry
-        if (g_dist.count(u) && current_f_score > (g_dist.at(u) + heuristic_h(graph.get_node_by_id(u), target_node))) {
+        double current_g_dist = g_dist.at(u);
+
+        if (current_f_score > (current_g_dist + heuristic_h(graph.get_node_by_id(u), target_node) + 1e-9)) {
              continue;
-        }
-        
-        //special case to skip processing if we already have a better g_dist
-        if (g_dist.count(u) && g_dist.at(u) < (current_f_score - heuristic_h(graph.get_node_by_id(u), target_node)) - 1e-9 ) {
-            continue;
         }
 
         if (u == target) {
@@ -85,9 +89,9 @@ std::pair<std::vector<int>, double> minimising_distance(
             }
             
             double edge_cost = edge.length;
-            double new_g_dist = g_dist.at(u) + edge_cost;
+            double new_g_dist = current_g_dist + edge_cost;
 
-            if (!g_dist.count(v) || new_g_dist < g_dist.at(v)) {
+            if (new_g_dist < g_dist.at(v)) {
                 g_dist[v] = new_g_dist;
                 parent[v] = u;
                 
@@ -238,8 +242,7 @@ json handle_shortest_path(Graph& graph, const json& query) {
     //edge case
     if (source == target) {
         result["possible"] = true;
-        const std::string key = (mode == "time") ? "minimum_time" : "minimum_distance";
-        result[key] = 0.0;
+        result["minimum_time/minimum_distance"] = 0.0;
         result["path"] = {source};
         return result;
     }
@@ -257,7 +260,7 @@ json handle_shortest_path(Graph& graph, const json& query) {
         
         if (path_res.second != std::numeric_limits<double>::infinity()) {
             result["possible"] = true;
-            result["minimum_distance"] = path_res.second; 
+            result["minimum_time/minimum_distance"] = path_res.second;
             result["path"] = path_res.first; 
         } else {
             result["possible"] = false;
@@ -268,7 +271,7 @@ json handle_shortest_path(Graph& graph, const json& query) {
 
         if (path_res.second != std::numeric_limits<double>::infinity()) {
             result["possible"] = true;
-            result["minimum_time"] = path_res.second;
+            result["minimum_time/minimum_distance"] = path_res.second;
             result["path"] = path_res.first;
         } else {
             result["possible"] = false;
