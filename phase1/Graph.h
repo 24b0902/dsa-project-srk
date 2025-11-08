@@ -85,6 +85,10 @@ public:
     bool remove_edge(int edge_id);
     bool modify_edge(int edge_id, const nlohmann::json& patch);
     bool restore_edge(int edge_id);
+    const std::unordered_map<int, Node>& get_all_nodes() const;
+
+
 };
+
 
 #endif
