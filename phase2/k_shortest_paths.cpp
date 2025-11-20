@@ -50,7 +50,7 @@ vector<int> dijkstra_path(const Graph &graph, int src, int dest, double &dist_ou
 vector<pair<vector<int>, double>> k_shortest_paths(Graph &graph, int src, int dest, int k, const string &mode) {
     
     if (mode != "distance") {
-        cerr << "❌ Error: Only 'distance' mode is supported in K-shortest paths.\n";
+        cerr << " Error: Only 'distance' mode is supported in K-shortest paths.\n";
         return {};
     }
 
